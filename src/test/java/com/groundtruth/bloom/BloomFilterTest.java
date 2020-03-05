@@ -1,38 +1,51 @@
 package com.groundtruth.bloom;
 
+import com.google.monitoring.runtime.instrumentation.AllocationRecorder;
 import com.groundtruth.bloom.BloomFilter.BloomFilterType;
 
 import java.lang.management.ManagementFactory;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.UUID;
 
 import static java.lang.Math.*;
 import static java.lang.Math.log;
 
 public class BloomFilterTest {
+    Map results = new HashMap<String, Integer>();
 
-    public void testCorrectness() {
+    public void checkCorrectness() {
 
         for (var bloomFilterType: BloomFilterType.values()) {
             System.out.println("Testing correctness of bloom filter type: " + bloomFilterType);
+            var s = new Sampler(bloomFilterType.toString());
+            AllocationRecorder.addSampler(s);
             int expectedElems = 10_000;
             float falsePositiveProbability = 0.05f;
             BloomFilter bloomFilter = BloomFilter.newBloomFilter(bloomFilterType, expectedElems, falsePositiveProbability);
-            testCorrectness(bloomFilter, expectedElems, falsePositiveProbability);
+            checkCorrectness(bloomFilter, expectedElems, falsePositiveProbability);
+            AllocationRecorder.removeSampler(s);
+            results.put(bloomFilterType, s.getNumOfAllocations());
         }
     }
 
-    public void testQuerySpeed() {
+    public void checkQuerySpeed() {
         for (var bloomFilterType: BloomFilterType.values()) {
             System.out.println("Testing query speed of bloom filter type: " + bloomFilterType);
-            int expectedElems = 10_000_000;
+            var s = new Sampler(bloomFilterType.toString());
+            AllocationRecorder.addSampler(s);
+            int expectedElems = 10_000;
             float falsePositiveProbability = 0.1f;
             BloomFilter bloomFilter = BloomFilter.newBloomFilter(bloomFilterType, expectedElems, falsePositiveProbability);
-            testQuerySpeed(bloomFilter, expectedElems, falsePositiveProbability);
+            checkQuerySpeed(bloomFilter, expectedElems, falsePositiveProbability);
+            AllocationRecorder.removeSampler(s);
+            results.put(bloomFilterType, s.getNumOfAllocations());
+
         }
     }
 
-    private void testCorrectness(BloomFilter bloomFilter, int expectedElems, float falsePositiveProbability ) {
+    private void checkCorrectness(BloomFilter bloomFilter, int expectedElems, float falsePositiveProbability ) {
 
             System.out.println("Testing correctness.\n"+
                     "Creating a Set and filling it together with our filter...");
@@ -70,7 +83,7 @@ public class BloomFilterTest {
     }
 
 
-    private void testQuerySpeed(BloomFilter bloomFilter, int expectedElems, float falsePositiveProbability) {
+    private void checkQuerySpeed(BloomFilter bloomFilter, int expectedElems, float falsePositiveProbability) {
         System.out.println("Testing query speed...");
         var bean = ManagementFactory.getThreadMXBean();
 
@@ -96,9 +109,16 @@ public class BloomFilterTest {
     }
 
     public static void main(String[] args) {
+
         var bloomFilterTest = new BloomFilterTest();
-        bloomFilterTest.testCorrectness();
-        bloomFilterTest.testQuerySpeed();
+        //bloomFilterTest.checkCorrectness();
+        bloomFilterTest.checkQuerySpeed();
+
+        for (var type: bloomFilterTest.results.keySet()) {
+            System.out.println(type + "      " + bloomFilterTest.results.get(type));
+        }
+
+
     }
 
 }
