@@ -12,7 +12,7 @@ https://github.com/Baqend/Orestes-Bloomfilter
 LOVA:
 https://github.com/lovasoa/bloomfilter
 
-##RESULTS:
+## RESULTS:
 
 ```
 SCALA      NumAllocations: 96;         FalsePositiveRate: 0.04839999973773956; QPS: 1244379.4491231728
@@ -26,7 +26,7 @@ But the GUAVA and ORESTES implementations are doing lots of allocations internal
 
 The SCALA and LOA versions use less allocations and have higher QPS than the others (likely due to less allocations) 
 
-##Dev
+## Dev
 To run this test, first do a clean build:
 ```
  mvn clean install
