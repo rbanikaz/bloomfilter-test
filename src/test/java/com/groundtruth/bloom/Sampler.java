@@ -6,16 +6,13 @@ public class Sampler implements com.google.monitoring.runtime.instrumentation.Sa
         this.type = type;
         this.numOfAllocations = 0;
     }
-    private String type;
-    private int numOfAllocations;
+    String type;
+    int numOfAllocations;
 
     @Override
     public void sampleAllocation(int count, String desc, Object newObj, long size) {
         numOfAllocations += size;
     }
 
-    int getNumOfAllocations() {
-        return numOfAllocations;
-    }
 
 }

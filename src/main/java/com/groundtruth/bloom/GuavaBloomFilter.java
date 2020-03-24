@@ -2,7 +2,7 @@ package com.groundtruth.bloom;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.Funnels;
-
+//https://guava.dev/releases/23.0/api/docs/com/google/common/hash/BloomFilter.html
 public class GuavaBloomFilter implements BloomFilter {
 
     private final com.google.common.hash.BloomFilter<String> bloomFilter;

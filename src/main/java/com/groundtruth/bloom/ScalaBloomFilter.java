@@ -6,6 +6,9 @@ import com.google.common.hash.Funnels;
 
 import java.nio.charset.Charset;
 
+// https://github.com/alexandrnikitin/bloom-filter-scala
+// https://alexandrnikitin.github.io/blog/bloom-filter-for-scala/
+// the only thing I dont like about this one is it uses sun.misc.unsafe which may get removed in future JVM versions
 public class ScalaBloomFilter implements BloomFilter {
 
     private final bloomfilter.mutable.BloomFilter<byte[]> bloomFilter;

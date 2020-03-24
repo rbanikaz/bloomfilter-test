@@ -4,7 +4,7 @@ import com.google.common.base.Charsets;
 import com.google.common.hash.Funnels;
 
 import static java.lang.Math.*;
-
+//https://github.com/lovasoa/bloomfilter
 public class LovaSoaBloomFilter implements BloomFilter {
 
     private final com.github.lovasoa.bloomfilter.BloomFilter bloomFilter;

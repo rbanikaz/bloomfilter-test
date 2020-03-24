@@ -13,7 +13,7 @@ import static java.lang.Math.*;
 import static java.lang.Math.log;
 
 public class BloomFilterTest {
-    Map results = new HashMap<String, Integer>();
+    Map<BloomFilterType, BloomFilterTestResult> results = new HashMap<>();
 
     public void checkCorrectness() {
 
@@ -24,9 +24,10 @@ public class BloomFilterTest {
             int expectedElems = 10_000;
             float falsePositiveProbability = 0.05f;
             BloomFilter bloomFilter = BloomFilter.newBloomFilter(bloomFilterType, expectedElems, falsePositiveProbability);
-            checkCorrectness(bloomFilter, expectedElems, falsePositiveProbability);
+            var actualFalsePositiveRate = checkCorrectness(bloomFilter, expectedElems, falsePositiveProbability);
             AllocationRecorder.removeSampler(s);
-            results.put(bloomFilterType, s.getNumOfAllocations());
+            var result = results.computeIfAbsent(bloomFilterType, k -> new BloomFilterTestResult());
+            result.falsePositiveRate = actualFalsePositiveRate;
         }
     }
 
@@ -35,17 +36,19 @@ public class BloomFilterTest {
             System.out.println("Testing query speed of bloom filter type: " + bloomFilterType);
             var s = new Sampler(bloomFilterType.toString());
             AllocationRecorder.addSampler(s);
-            int expectedElems = 10_000;
-            float falsePositiveProbability = 0.1f;
+            int expectedElems = 10_000_000;
+            float falsePositiveProbability = 0.05f;
             BloomFilter bloomFilter = BloomFilter.newBloomFilter(bloomFilterType, expectedElems, falsePositiveProbability);
-            checkQuerySpeed(bloomFilter, expectedElems, falsePositiveProbability);
+            double queriesPerSecond = checkQuerySpeed(bloomFilter, expectedElems, falsePositiveProbability);
             AllocationRecorder.removeSampler(s);
-            results.put(bloomFilterType, s.getNumOfAllocations());
+            var result = results.computeIfAbsent(bloomFilterType, k -> new BloomFilterTestResult());
+            result.queriesPerSecond = queriesPerSecond;
+            result.numOfAllocations = s.numOfAllocations;
 
         }
     }
 
-    private void checkCorrectness(BloomFilter bloomFilter, int expectedElems, float falsePositiveProbability ) {
+    private double checkCorrectness(BloomFilter bloomFilter, int expectedElems, float falsePositiveProbability ) {
 
             System.out.println("Testing correctness.\n"+
                     "Creating a Set and filling it together with our filter...");
@@ -80,10 +83,11 @@ public class BloomFilterTest {
             int bitsize = (int)ceil((expectedElems * log(falsePositiveProbability)) / log(1 / pow(2, log(2))));
             double expectedRate = Math.exp(-ln2*ln2 * bitsize / expectedElems);
             assert rate <= expectedRate * 1.10 : "error rate p = e^(-ln2^2*m/n)";
+            return rate;
     }
 
 
-    private void checkQuerySpeed(BloomFilter bloomFilter, int expectedElems, float falsePositiveProbability) {
+    private double checkQuerySpeed(BloomFilter bloomFilter, int expectedElems, float falsePositiveProbability) {
         System.out.println("Testing query speed...");
         var bean = ManagementFactory.getThreadMXBean();
 
@@ -106,14 +110,17 @@ public class BloomFilterTest {
                 time,
                 expectedElems/(time*1e-9)
         );
+        return expectedElems/(time*1e-9);
     }
 
     public static void main(String[] args) {
 
         var bloomFilterTest = new BloomFilterTest();
-        //bloomFilterTest.checkCorrectness();
+        bloomFilterTest.checkCorrectness();
         bloomFilterTest.checkQuerySpeed();
 
+
+        System.out.println("Allocations ");
         for (var type: bloomFilterTest.results.keySet()) {
             System.out.println(type + "      " + bloomFilterTest.results.get(type));
         }
